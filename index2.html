@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WhatsApp Message Sender</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f8f5;
+        }
+
+        h1 {
+            text-align: center;
+            width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: hsl(135, 84%, 70%);
+        }
+
+        form {
+            width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: hsl(0, 0%, 100%);
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50; /* Green background color */
+            color: #fff; /* White text color */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049; /* Darker green hover color */
+        }
+
+        #timer {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Send WhatsApp Message</h1>
+    <form method="POST" action="/send_message" onsubmit="startTimer()">
+        <label for="phone_number">Phone Number:</label>
+        <input type="text" name="phone_number" required><br><br>
+
+        <label for="message">Message:</label>
+        <textarea name="message" required></textarea><br><br>
+
+        <label for="hour">Hour (0-23):</label>
+        <input type="number" name="hour" min="0" max="23" required><br><br>
+
+        <label for="minute">Minute (0-59):</label>
+        <input type="number" name="minute" min="0" max="59" required><br><br>
+
+        <input type="submit" value="Send Message" id="sendButton">
+    </form>
+
+    <div id="timer"></div>
+
+    <script>
+    function startTimer() {
+        var hourInput = document.querySelector('input[name="hour"]').value;
+        var minuteInput = document.querySelector('input[name="minute"]').value;
+
+        // Validate user input for hour and minute
+        if (isNaN(hourInput) || isNaN(minuteInput) || hourInput < 0 || hourInput > 23 || minuteInput < 0 || minuteInput > 59) {
+            alert('Please enter valid values for hour (0-23) and minute (0-59).');
+            return;
+        }
+
+        var now = new Date();
+        var targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hourInput, minuteInput, 0, 0);
+
+        var countdown = Math.max((targetTime - now) / 1000, 0); // Calculate time difference in seconds
+
+        var timerDisplay = document.getElementById('timer');
+        var sendButton = document.getElementById('sendButton');
+
+        sendButton.disabled = true; // Disable the button during countdown
+
+        var interval = setInterval(function() {
+            var minutes = Math.floor(countdown / 60);
+            var seconds = countdown % 60;
+
+            timerDisplay.innerHTML = 'Sending in ' + minutes + ' minutes and ' + seconds + ' seconds...';
+
+            if (countdown <= 0) {
+                clearInterval(interval);
+                timerDisplay.innerHTML = '';
+                sendButton.disabled = false; // Re-enable the button
+            }
+
+            countdown--;
+        }, 1000);
+    }
+</script>
+
+</body>
+</html>
