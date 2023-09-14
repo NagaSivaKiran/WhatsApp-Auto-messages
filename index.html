@@ -12,7 +12,6 @@
             background-repeat: no-repeat;
             background-attachment: fixed; /* Keep the background fixed while scrolling */
         }
-
         h1 {
             text-align: center;
             width: 400px;
@@ -68,7 +67,7 @@
 </head>
 <body>
     <h1>Send WhatsApp Message</h1>
-    <form method="POST" action="/send_message" onsubmit="startTimer()">
+    <form method="POST" action="http://localhost:8000/send_message" onsubmit="startTimer()">
         <label for="phone_number">Phone Number:</label>
         <input type="text" name="phone_number" required><br><br>
 
@@ -85,44 +84,90 @@
     </form>
 
     <div id="timer"></div>
-
     <script>
-    function startTimer() {
-        var hourInput = document.querySelector('input[name="hour"]').value;
-        var minuteInput = document.querySelector('input[name="minute"]').value;
+        function startTimer() {
+            var hourInput = document.querySelector('input[name="hour"]').value;
+            var minuteInput = document.querySelector('input[name="minute"]').value;
+    
+            // Validate user input for hour and minute
+            if (isNaN(hourInput) || isNaN(minuteInput) || hourInput < 0 || hourInput > 23 || minuteInput < 0 || minuteInput > 59) {
+                alert('Please enter valid values for hour (0-23) and minute (0-59).');
+                return;
+            }
+    
+            var now = new Date();
+            var targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hourInput, minuteInput, 0, 0);
+    
+            var countdown = Math.max((targetTime - now) / 1000, 0); // Calculate time difference in seconds
+    
+            var timerDisplay = document.getElementById('timer');
+            var sendButton = document.getElementById('sendButton');
+    
+            sendButton.disabled = true; // Disable the button during countdown
+    
+            var interval = setInterval(function() {
+                var minutes = Math.floor(countdown / 60);
+                var seconds = countdown % 60;
+    
+                timerDisplay.innerHTML = 'Sending in ' + minutes + ' minutes and ' + seconds + ' seconds...';
+    
+                if (countdown <= 0) {
+                    clearInterval(interval);
+                    timerDisplay.innerHTML = '';
+                    sendButton.disabled = false; // Re-enable the button
+                }
+    
+                countdown--;
+            }, 1000);
+        }
+    </script>
 
-        // Validate user input for hour and minute
-        if (isNaN(hourInput) || isNaN(minuteInput) || hourInput < 0 || hourInput > 23 || minuteInput < 0 || minuteInput > 59) {
-            alert('Please enter valid values for hour (0-23) and minute (0-59).');
-            return;
+    <!-- Include Brython script -->
+<script type="text/javascript" src="C:\Users\SIVA KIRAN\OneDrive\Desktop\whatsapp\templates\brython.js"></script>
+
+
+    <!-- Brython code -->
+    <script type="text/python">
+        # Import required modules
+        from browser import document
+        import pywhatkit as pywhatkit
+
+        # Define Brython-compatible Flask-like routes
+        def route(path):
+            def decorator(fn):
+                def handler(*args, **kwargs):
+                    return fn(*args, **kwargs)
+
+                return handler
+
+            return decorator
+
+        # Create a Brython-compatible Flask-like app instance
+        app = {
+            'route': route
         }
 
-        var now = new Date();
-        var targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hourInput, minuteInput, 0, 0);
+        # Define routes using Brython-compatible decorators
+        @app['route']('/')
+        def index():
+            return document.getElementById('timer').textContent
 
-        var countdown = Math.max((targetTime - now) / 1000, 0); // Calculate time difference in seconds
+        @app['route']('/send_message', methods=['POST'])
+        def send_message():
+            phone_number = document.querySelector('[name="phone_number"]').value
+            message = document.querySelector('[name="message"]').value
+            hour = int(document.querySelector('[name="hour"]').value)
+            minute = int(document.querySelector('[name="minute"]').value)
 
-        var timerDisplay = document.getElementById('timer');
-        var sendButton = document.getElementById('sendButton');
+            try:
+                pywhatkit.sendwhatmsg(phone_number, message, hour, minute)
+                return 'Message sent successfully!'
+            except Exception as e:
+                return f'Error: {str(e)}'
 
-        sendButton.disabled = true; // Disable the button during countdown
-
-        var interval = setInterval(function() {
-            var minutes = Math.floor(countdown / 60);
-            var seconds = countdown % 60;
-
-            timerDisplay.innerHTML = 'Sending in ' + minutes + ' minutes and ' + seconds + ' seconds...';
-
-            if (countdown <= 0) {
-                clearInterval(interval);
-                timerDisplay.innerHTML = '';
-                sendButton.disabled = false; // Re-enable the button
-            }
-
-            countdown--;
-        }, 1000);
-    }
-</script>
-
+        # Run the Brython app
+        if __name__ == '__main__':
+            app.run()
+    </script>
 </body>
 </html>
